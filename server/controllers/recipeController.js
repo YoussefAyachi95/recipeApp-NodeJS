@@ -2,7 +2,7 @@ require('../models/connection')
 const Category = require('../models/Category')
 const Recipe = require('../models/Recipe')
 
-// Get Homepage
+// GET Homepage
 
 exports.homepage = async(req,res) => {
     try {
@@ -25,7 +25,7 @@ exports.homepage = async(req,res) => {
 }
 
 
-// Get categories
+// GET categories
 
 exports.exploreCategories = async(req,res) => {
     try {
@@ -41,7 +41,24 @@ exports.exploreCategories = async(req,res) => {
 
 }
 
-// Get recipe/:id
+
+// GET category/:id
+
+exports.exploreCategoriesById = async(req,res) => {
+    try {
+        const categoryId = req.params.id
+        const limitNumber = 20
+        const categoryById = await Recipe.find({ 'category': categoryId }).limit(limitNumber)
+
+        res.render('categories', {title: 'Cooking Blog - Categories', categoryById});
+
+    } catch (err) {
+        res.status(500).send({ message: err.message || "Error ocurred"})
+    }
+}
+
+
+// GET recipe/:id
 
 exports.exploreRecipe = async(req,res) => {
     try {
@@ -57,3 +74,47 @@ exports.exploreRecipe = async(req,res) => {
 
 }
 
+// GET /explore-latest
+
+exports.exploreLatest = async(req,res) => {
+    try {
+        const limitNumber = 20
+        const recipe = await Recipe.find({}).sort({_id: -1 }).limit(limitNumber)
+
+        res.render('explore-latest', {title: 'Cooking Blog - Latest Recipes', recipe});
+
+    } catch (err) {
+        res.status(500).send({ message: err.message || "Error ocurred"})
+    }
+
+}
+
+// GET /explore-random
+
+exports.exploreRandom = async(req,res) => {
+    try {
+        const count = await Recipe.find().countDocuments()
+        const randomNum = Math.floor(Math.random() * count)
+        const recipe = await Recipe.findOne().skip(randomNum).exec()
+
+        res.render('explore-random', {title: 'Cooking Blog - Random Recipe', recipe});
+
+    } catch (err) {
+        res.status(500).send({ message: err.message || "Error ocurred"})
+    }
+
+}
+
+// POST Search
+
+exports.searchRecipe = async(req,res) => {
+    try {
+        const searchTerm = req.body.searchTerm
+        const recipe = await Recipe.find({ $text: { $search: searchTerm, $diacriticSensitive: true }})
+
+        res.render('search', {title: 'Cooking Blog - Search', recipe});
+
+    } catch (err) {
+        res.status(500).send({ message: err.message || "Error ocurred"})
+    }
+}
